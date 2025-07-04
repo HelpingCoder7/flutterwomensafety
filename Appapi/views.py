@@ -71,19 +71,21 @@ def register_user(request):
 @api_view(['POST'])
 def loginuser(request):
     data = request.data
-    phone = data.get("phone_number")
+    phone_str = data.get("phone_number")     
     password = data.get("password")
-    
-    print(phone,password)
 
-    if not phone or not password:
+    if not phone_str or not password:
         return Response({"error": "Missing fields"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Correct usage
+    try:
+        phone = int(phone_str)  # ✅ convert string to int
+    except (ValueError, TypeError):
+        return Response({"error": "Invalid phone number format"}, status=status.HTTP_400_BAD_REQUEST)
+
     user = user_collection.find_one({"phone_number": phone})
 
     if not user:
-        return Response({"error": "User not found{phone}"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": f"User not found: {phone}"}, status=status.HTTP_404_NOT_FOUND)
 
     if user.get("password") != password:
         return Response({"error": "Incorrect password"}, status=status.HTTP_401_UNAUTHORIZED)
